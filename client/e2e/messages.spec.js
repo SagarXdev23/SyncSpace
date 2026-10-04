@@ -29,11 +29,17 @@ test('messages plus button creates and selects a workspace channel', async ({ pa
     }),
   );
   let createdWorkspace;
+  let createRequest;
   await page.route('**/api/workspaces', async (route) => {
     if (route.request().method() === 'POST') {
+      createRequest = {
+        contentType: route.request().headers()['content-type'],
+        body: route.request().postData(),
+      };
       createdWorkspace = {
         _id: 'workspace-created',
         name: 'New Message Space',
+        logo: 'https://res.cloudinary.com/example/workspace.png',
         members: [{ user: 'user-messages' }],
       };
       await route.fulfill({
@@ -57,9 +63,16 @@ test('messages plus button creates and selects a workspace channel', async ({ pa
   await page.getByRole('button', { name: 'Create workspace channel' }).click();
   await expect(page.getByRole('heading', { name: 'Create Workspace' })).toBeVisible();
   await page.getByLabel('Workspace Name').fill('New Message Space');
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'workspace-logo.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('test image'),
+  });
   await page.getByRole('button', { name: 'Create', exact: true }).click();
 
   await expect(page.getByRole('img', { name: 'New Message Space' })).toBeVisible();
   await expect(page.getByRole('button', { name: /New Message Space/ })).toBeVisible();
   expect(createdWorkspace?._id).toBe('workspace-created');
+  expect(createRequest.contentType).toMatch(/^multipart\/form-data; boundary=/);
+  expect(createRequest.body).toContain('workspace-logo.png');
 });
