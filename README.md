@@ -22,7 +22,7 @@ Teams create **workspaces**, invite members with roles, manage **projects**, tra
 - [Database Design](#database-design)
 - [API Documentation](#api-documentation)
 - [Authentication](#authentication)
-- [RBAC](#rbac)
+- [Role Based Access control](#role-based-access-control)
 - [Real-time Architecture](#real-time-architecturesocketio)
 - [Redis Usage](#redis-usage)
 - [File Upload Architecture](#file-upload-architecture)
@@ -136,7 +136,7 @@ Base URL: `/api`. All responses are `{ success, message, data }`. Protected rout
 - **Rotation**: every refresh issues a new pair and replaces the stored hash. If a refresh token is reused (valid signature but unknown hash), all sessions for that user are revoked.
 - **Frontend**: an Axios interceptor retries once via `/auth/refresh` on 401, then logs out and redirects to login.
 
-## RBAC
+## Role Based Access control
 
 | Capability | OWNER | ADMIN | MEMBER |
 |---|---|---|---|
