@@ -80,6 +80,15 @@ export default function MembersTab() {
     if (removeMember.fulfilled.match(result)) toast('Member removed', 'success');
   };
 
+  const copyEmail = async (member) => {
+    try {
+      await navigator.clipboard.writeText(member.email);
+      toast('Email copied', 'success');
+    } catch {
+      toast('Could not copy email', 'error');
+    }
+  };
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
@@ -140,9 +149,44 @@ export default function MembersTab() {
                   <Icon name="x" className="h-4 w-4" />
                 </button>
               ) : (
-                <span className="icon-btn pointer-events-none">
-                  <Icon name="dots" className="h-5 w-5" />
-                </span>
+                <details className="relative">
+                  <summary
+                    className="icon-btn list-none cursor-pointer"
+                    aria-label={`Actions for ${m.name}`}
+                    title={`Actions for ${m.name}`}
+                  >
+                    <Icon name="dots" className="h-5 w-5" />
+                  </summary>
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg"
+                  >
+                    {canManage && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-canvas"
+                        onClick={(e) => {
+                          e.currentTarget.closest('details').open = false;
+                          setInviteOpen(true);
+                        }}
+                      >
+                        Invite member
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-canvas"
+                      onClick={(e) => {
+                        e.currentTarget.closest('details').open = false;
+                        copyEmail(m);
+                      }}
+                    >
+                      Copy email
+                    </button>
+                  </div>
+                </details>
               )}
             </li>
           );

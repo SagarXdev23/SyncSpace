@@ -8,10 +8,13 @@ import Icon from '../components/Icon';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal';
 import {
   fetchWorkspaces,
+  deleteWorkspace,
   selectWorkspaces,
   selectWorkspaceError,
   clearWorkspaceError,
 } from '../features/workspace/workspaceSlice';
+import { selectUser } from '../features/auth/authSlice';
+import { getMyRole } from '../utils/constants';
 import { toast } from '../components/Toast';
 
 const CARD_COLORS = ['bg-statPurple', 'bg-statOrange', 'bg-statGreen', 'bg-statBlue', 'bg-[#F472B6]', 'bg-[#2DD4BF]'];
@@ -19,6 +22,7 @@ const CARD_COLORS = ['bg-statPurple', 'bg-statOrange', 'bg-statGreen', 'bg-statB
 export default function Workspaces() {
   const dispatch = useDispatch();
   const workspaces = useSelector(selectWorkspaces);
+  const user = useSelector(selectUser);
   const wsError = useSelector(selectWorkspaceError);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,6 +45,12 @@ export default function Workspaces() {
     if (!q) return workspaces;
     return workspaces.filter((w) => (w.name || '').toLowerCase().includes(q));
   }, [workspaces, query]);
+
+  const onDeleteWorkspace = async (workspace) => {
+    if (!window.confirm(`Delete "${workspace.name}"? This cannot be undone.`)) return;
+    const result = await dispatch(deleteWorkspace(workspace._id));
+    if (deleteWorkspace.fulfilled.match(result)) toast('Workspace deleted', 'success');
+  };
 
   return (
     <Shell onSearch={setQuery} searchPlaceholder="Search workspaces…">
@@ -83,13 +93,51 @@ export default function Workspaces() {
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((w, i) => {
               const memberCount = w.members?.length || 0;
+              const isOwner = getMyRole(w, user?._id) === 'OWNER';
               return (
-                <Link
+                <article
                   key={w._id}
-                  to={`/workspace/${w._id}`}
-                  className="card group p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+                  className="card group relative p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-lift"
                 >
-                  <div className="flex items-start justify-between">
+                  <details className="absolute right-5 top-5 z-10">
+                    <summary
+                      className="icon-btn list-none cursor-pointer"
+                      aria-label={`Actions for ${w.name}`}
+                      title={`Actions for ${w.name}`}
+                    >
+                      <Icon name="dots" className="h-5 w-5" />
+                    </summary>
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full mt-1 w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg"
+                    >
+                      <Link
+                        role="menuitem"
+                        to={`/workspace/${w._id}`}
+                        className="block px-3 py-2 text-sm text-ink hover:bg-canvas"
+                      >
+                        Open workspace
+                      </Link>
+                      <Link
+                        role="menuitem"
+                        to={`/workspace/${w._id}/settings`}
+                        className="block px-3 py-2 text-sm text-ink hover:bg-canvas"
+                      >
+                        Workspace settings
+                      </Link>
+                      {isOwner && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="block w-full px-3 py-2 text-left text-sm text-[#D63A3A] hover:bg-canvas"
+                          onClick={() => onDeleteWorkspace(w)}
+                        >
+                          Delete workspace
+                        </button>
+                      )}
+                    </div>
+                  </details>
+                  <Link to={`/workspace/${w._id}`} className="block pr-10">
                     {w.logo ? (
                       <img src={w.logo} alt="" className="h-11 w-11 rounded-xl object-cover" />
                     ) : (
@@ -97,17 +145,14 @@ export default function Workspaces() {
                         <Icon name="users" className="h-5 w-5" />
                       </span>
                     )}
-                    <span className="icon-btn pointer-events-none">
-                      <Icon name="dots" className="h-5 w-5" />
-                    </span>
-                  </div>
-                  <h3 className="mt-4 truncate text-[15px] font-bold text-ink transition group-hover:text-primary-dark">
-                    {w.name}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {memberCount} member{memberCount === 1 ? '' : 's'}
-                  </p>
-                </Link>
+                    <h3 className="mt-4 truncate text-[15px] font-bold text-ink transition group-hover:text-primary-dark">
+                      {w.name}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {memberCount} member{memberCount === 1 ? '' : 's'}
+                    </p>
+                  </Link>
+                </article>
               );
             })}
           </div>
