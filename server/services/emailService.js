@@ -7,20 +7,35 @@
  * API keeps working in development without an email provider.
  */
 const nodemailer = require('nodemailer');
+const dns = require('dns').promises;
 
 let transporter = null;
+let resolvedHost = null;
 
-function getTransporter() {
+async function resolveIPv4(host) {
+  if (resolvedHost) return resolvedHost;
+  try {
+    const { address } = await dns.lookup(host, { family: 4 });
+    resolvedHost = address;
+    return address;
+  } catch {
+    return host; // fall back to the hostname
+  }
+}
+
+async function getTransporter() {
   if (transporter) return transporter;
   if (!process.env.SMTP_HOST) return null;
+  const host = await resolveIPv4(process.env.SMTP_HOST);
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host,
     port: parseInt(process.env.SMTP_PORT, 10) || 587,
     secure: process.env.SMTP_SECURE === 'true',
     auth:
       process.env.SMTP_USER && process.env.SMTP_PASS
         ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
         : undefined,
+    tls: { servername: process.env.SMTP_HOST }, // SNI for the original hostname
   });
   return transporter;
 }
@@ -30,7 +45,7 @@ function isConfigured() {
 }
 
 async function sendMail({ to, subject, text, html }) {
-  const tx = getTransporter();
+  const tx = await getTransporter();
   const from = process.env.SMTP_FROM || 'SyncSpace <no-reply@syncspace.local>';
   if (!tx) {
     // Dev fallback: log instead of sending. Never throws.
