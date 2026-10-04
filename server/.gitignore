@@ -1,3 +1,8 @@
-node_modules
+node_modules/
 .env
-dist
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+coverage/
+.nyc_output/
