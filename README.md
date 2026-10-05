@@ -7,6 +7,10 @@
 ![Socket.io](https://img.shields.io/badge/Socket.io-realtime-010101?logo=socket.io&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+## 🌐 Live Demo
+
+🚀 **[Visit SyncSpace](https://syncspace0.netlify.app/)**
+
 **SyncSpace** is a real-time collaborative workspace for teams — the core ideas of Trello, Slack, and Google Drive in one app.
 
 Teams create **workspaces**, invite members with roles, manage **projects**, track work on **Kanban boards**, **chat in real time**, comment on tasks, **share files**, and get **real-time notifications** — all backed by a workspace activity feed.
